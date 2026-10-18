@@ -1,0 +1,12 @@
+{
+  "name": "elina-la-nina-de-la-montana",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/prepare-book.mjs && node --check public/app.js && node --check public/reader-core.js && node scripts/verify.mjs",
+    "test": "node --test tests/reader.test.mjs"
+  },
+  "engines": {"node": ">=22"}
+}
