@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "check": "node scripts/prepare-book.mjs && node --check public/app.js && node --check public/reader-core.js && node scripts/verify.mjs",
-    "test": "node --test tests/reader.test.mjs"
+    "check": "node scripts/prepare-book.mjs && node --check public/app.js && node --check public/reader-core.js && node --check public/audiobook.js && node --check public/narration-core.js && node scripts/verify.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "engines": {"node": ">=22"}
 }

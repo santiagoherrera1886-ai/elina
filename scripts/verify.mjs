@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 const root = new URL('../public/', import.meta.url);
 const html = await readFile(new URL('index.html', root), 'utf8');
 const css = await readFile(new URL('styles.css', root), 'utf8');
-const app = await readFile(new URL('app.js', root), 'utf8');
+const app = (await Promise.all(['app.js','audiobook.js','narration-core.js'].map(path => readFile(new URL(path, root), 'utf8')))).join('\n');
 const book = JSON.parse(await readFile(new URL('data/book.json', root), 'utf8'));
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
 assert.equal(new Set(ids).size, ids.length, 'Duplicate document IDs');

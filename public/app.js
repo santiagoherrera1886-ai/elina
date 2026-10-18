@@ -1,4 +1,5 @@
 import { STORAGE_KEY, sanitizeState, findChapter, overallProgress, parseReaderHash, searchBook, clamp } from './reader-core.js';
+import { mountAudiobook } from './audiobook.js';
 
 const $ = (selector, context = document) => context.querySelector(selector);
 const $$ = (selector, context = document) => [...context.querySelectorAll(selector)];
@@ -13,6 +14,7 @@ let book, state, currentChapter, bookPromise;
 let previousHash = '#inicio', returnFocus = null, tab = 'index';
 let restoring = false, renderVersion = 0, saveTimer, searchTimer, toastTimer;
 let storageAvailable = true, lastReadingBlock = null;
+let audiobook;
 
 function el(tag, className, text) {
   const element = document.createElement(tag);
@@ -54,6 +56,7 @@ async function loadBook() {
     try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); }
     catch { saved = null; }
     state = sanitizeState(book, saved);
+    audiobook = mountAudiobook({ reader, book, notify, openChapter(position) { savePosition(); renderChapter(position); } });
     $$('[data-time]').forEach(element => {
       element.textContent = String(book.chapters[Number(element.dataset.time)].minutes);
     });
@@ -123,6 +126,7 @@ async function openReader(target = 'resume', { fromRoute = false } = {}) {
 
 function closeReader({ fromRoute = false } = {}) {
   if (!reader.open) return;
+  audiobook?.pause();
   savePosition();
   reader.close();
   document.body.classList.remove('reader-open');
@@ -172,6 +176,7 @@ function renderChapter(position, { updateRoute = true } = {}) {
   $('#next-chapter').disabled = false;
   $('#next-chapter').textContent = index === book.chapters.length - 1 ? 'Terminar esta parte ✓' : 'Siguiente capítulo →';
   renderSidebar();
+  audiobook?.onReaderChapterChanged(currentChapter, position);
   if (mobile.matches) setSidebar(false);
   if (updateRoute) history.replaceState({ reader: true }, '', routeFor(position));
   requestAnimationFrame(() => {
@@ -320,6 +325,13 @@ function navigateChapter(direction) {
 }
 
 $$('[data-read]').forEach(button => button.addEventListener('click', () => openReader(button.dataset.read)));
+$$('[data-listen]').forEach(button => button.addEventListener('click', async () => {
+  try {
+    await loadBook();
+    await openReader(audiobook.resumeTarget());
+    audiobook.show();
+  } catch { await openReader('prologo'); }
+}));
 $('#close-reader').addEventListener('click', () => closeReader());
 reader.addEventListener('cancel', event => { event.preventDefault(); closeReader(); });
 $('#toggle-sidebar').addEventListener('click', () => setSidebar($('#toggle-sidebar').getAttribute('aria-expanded') !== 'true'));
